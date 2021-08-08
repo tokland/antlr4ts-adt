@@ -4,9 +4,9 @@ Thin wrapper over antlr4ts to build full-typed ADTs from ANTLR4 grammars for Typ
 
 The ANTLR4 grammar must have:
 
-0. A `start` rule containing a single node.
-1. Named labels (` NODE # ThisIsALabel`) to be used as the `type` property of the discriminated tagged union type.
-2. Inner labels (`mylabel=NODE`) to be used as properties of that particular node type.
+0. A `start` rule referencing a single rule.
+1. Named labels (` NODE # ThisIsALabel`) that will be used as the `type` property of the discriminated tagged union.
+2. Inner labels (`mylabel=NODE`) that will be used as properties of that particular node type.
 
 ## Example
 
@@ -54,7 +54,7 @@ console.log(input, "=", calculatorEval(ast)); // (40 + 5) - 3 = 42
 
 Usage:
 
-```
+```shell
 $ (cd src/example && npx antlr4ts Calculator.g4 -o antlr4 -visitor)
 $ npx ts-node src/example/calculator.ts
 ```
