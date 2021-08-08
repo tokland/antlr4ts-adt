@@ -3,7 +3,8 @@ import { CalculatorLexer } from "./antlr4/CalculatorLexer";
 import { CalculatorParser } from "./antlr4/CalculatorParser";
 import { CalculatorVisitor } from "./antlr4/CalculatorVisitor";
 
-type CalculatorNode = AstNode<CalculatorVisitor<unknown>>;
+type CalculatorGrammar = CalculatorVisitor<unknown>;
+type CalculatorNode = AstNode<CalculatorGrammar>;
 
 function calculatorEval(node: CalculatorNode): number {
     switch (node.type) {
@@ -19,7 +20,7 @@ function calculatorEval(node: CalculatorNode): number {
 }
 
 const input = "(40 + 5) - 3";
-const ast = getAst<CalculatorVisitor<unknown>>(input, {
+const ast = getAst<CalculatorGrammar>(input, {
     lexer: CalculatorLexer,
     parser: CalculatorParser,
 });

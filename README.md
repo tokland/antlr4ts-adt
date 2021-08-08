@@ -2,10 +2,10 @@ Thin wrapper over antlr4ts to build full-typed ADTs from ANTLR4 grammars for Typ
 
 ## Requirements
 
-The ANTLR4 grammar must have:
+The package uses an opinionated approach that does not cover all use cases. To use it, your ANTLR4 grammar must have:
 
 0. A `start` rule referencing a single rule.
-1. Named labels (` NODE # ThisIsALabel`) that will be used as the `type` property of the discriminated tagged union.
+1. Named labels (` NODE # ThisIsALabel`) that will be used as the `{ type: "ThisIsALabel` }` property of the discriminated tagged union.
 2. Inner labels (`mylabel=NODE`) that will be used as properties of that particular node type.
 
 ## Example
@@ -30,6 +30,21 @@ expression
 ```
 
 ```typescript
+type Grammar = CalculatorVisitor<unknown>;
+type CalculatorNode = AstNode<Grammar>;
+/* type CalculatorNode = {
+    type: "Number";
+    value: Token;
+} | {
+    type: "Parentheses";
+    inner: CalculatorNode;
+} | {
+    type: "AdditionOrSubtraction";
+    left: CalculatorNode;
+    operator: Token;
+    right: CalculatorNode;
+} */
+
 function calculatorEval(node: AstNode<CalculatorVisitor<unknown>>): number {
     switch (node.type) {
         case "Number":
