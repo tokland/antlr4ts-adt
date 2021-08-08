@@ -5,8 +5,6 @@ import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
 import { NumberContext } from "./CalculatorParser";
 import { ParenthesesContext } from "./CalculatorParser";
-import { PowerContext } from "./CalculatorParser";
-import { MultiplicationOrDivisionContext } from "./CalculatorParser";
 import { AdditionOrSubtractionContext } from "./CalculatorParser";
 import { StartContext } from "./CalculatorParser";
 import { ExpressionContext } from "./CalculatorParser";
@@ -42,32 +40,6 @@ export interface CalculatorListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitParentheses?: (ctx: ParenthesesContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `Power`
-	 * labeled alternative in `CalculatorParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	enterPower?: (ctx: PowerContext) => void;
-	/**
-	 * Exit a parse tree produced by the `Power`
-	 * labeled alternative in `CalculatorParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	exitPower?: (ctx: PowerContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `MultiplicationOrDivision`
-	 * labeled alternative in `CalculatorParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	enterMultiplicationOrDivision?: (ctx: MultiplicationOrDivisionContext) => void;
-	/**
-	 * Exit a parse tree produced by the `MultiplicationOrDivision`
-	 * labeled alternative in `CalculatorParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	exitMultiplicationOrDivision?: (ctx: MultiplicationOrDivisionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by the `AdditionOrSubtraction`
