@@ -43,13 +43,16 @@ function calculatorEval(node: AstNode<CalculatorVisitor<unknown>>): number {
     }
 }
 
-const ast = getAst<CalculatorVisitor<unknown>>("1 + 3", {
+const input = "(40 + 5) - 3";
+const ast = getAst<CalculatorVisitor<unknown>>(input, {
     lexer: CalculatorLexer,
     parser: CalculatorParser,
 });
-console.log(JSON.stringify(ast.node, null, 2));
-console.log(ast.text, "=", calculatorEval(ast.node));
+console.log(JSON.stringify(ast, null, 2));
+console.log(input, "=", calculatorEval(ast)); // (40 + 5) - 3 = 42
 ```
+
+Usage:
 
 ```
 $ (cd src/example && npx antlr4ts Calculator.g4 -o antlr4 -visitor)

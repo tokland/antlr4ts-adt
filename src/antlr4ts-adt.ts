@@ -14,31 +14,34 @@ import { RuleNode } from "antlr4ts/tree/RuleNode";
 type Keys<T> = Exclude<keyof T, never>;
 type Values<T> = T[keyof T];
 type Get<T, Prop extends Key> = T[Prop & keyof T];
+type Expand<T> = {} & { [P in keyof T]: T[P] };
+type Params<T> = T extends (...args: infer P) => any ? P : never;
+type Key = keyof any;
 
 type RemoveVisitPrefix<T extends Key> = T extends `visit${infer S}` ? S : never;
 
-type IgnoreProperies = "start" | "stop" | "parent";
-type GetProperties<Prop> = Prop extends `_${infer U}` ? Exclude<U, IgnoreProperies> : never;
+type InternalProperties = "start" | "stop" | "parent";
+type InternalVisitMethod = "visit" | "visitStart" | "visitErrorNode" | "visitTerminal" | "visitChildren";
 
-type Params<T> = T extends (...args: infer P) => any ? P : never;
-
-type Key = keyof any;
-
+type GetProperties<Prop> = Prop extends `_${infer U}` ? Exclude<U, InternalProperties> : never;
 type GetContext<Visitor, VisitMethod extends Key> = Params<NonNullable<Visitor[VisitMethod & keyof Visitor]>>[0];
-
 type GetContextProperties<Visitor, VisitMethod extends Key> = GetProperties<Keys<GetContext<Visitor, VisitMethod>>>;
 
-type InternalVisitMethod = "visit" | "visitStart" | "visitErrorNode" | "visitTerminal" | "visitChildren";
 type AllVisitMethod<Visitor> = Exclude<keyof Visitor, InternalVisitMethod>;
 
 type VisitMethod<Visitor> = Values<
-    { [VM in AllVisitMethod<Visitor>]: GetContextProperties<Visitor, VM> extends never ? never : VM }
+    { [Method in AllVisitMethod<Visitor>]: GetContextProperties<Visitor, Method> extends never ? never : Method }
 >;
 
-type GetProps<Visitor, VM extends VisitMethod<Visitor>> = {
-    [Prop in GetContextProperties<Visitor, VM>]: Get<GetContext<Visitor, VM>, `_${Prop}`> extends Antlr4Token
-        ? Token
-        : AstNode<Visitor>;
+type GetPropType<Visitor, Method extends VisitMethod<Visitor>, Prop extends string> = Get<
+    GetContext<Visitor, Method>,
+    `_${Prop}`
+> extends Antlr4Token
+    ? Token
+    : AstNode<Visitor>;
+
+type GetProps<Visitor, Method extends VisitMethod<Visitor>> = {
+    [Prop in GetContextProperties<Visitor, Method>]: GetPropType<Visitor, Method, Prop>;
 };
 
 export interface Token {
@@ -47,10 +50,10 @@ export interface Token {
 }
 
 export type AstNode<Visitor> = Values<
-    { [VM in VisitMethod<Visitor>]: { type: RemoveVisitPrefix<VM> } & GetProps<Visitor, VM> }
+    { [Method in VisitMethod<Visitor>]: Expand<{ type: RemoveVisitPrefix<Method> } & GetProps<Visitor, Method>> }
 >;
 
-class BuildAstVisitor<Visitor> extends AbstractParseTreeVisitor<AstNode<Visitor>> {
+class AstBuilderVisitor<Visitor> extends AbstractParseTreeVisitor<AstNode<Visitor>> {
     constructor(private parser: Parser) {
         super();
     }
@@ -76,7 +79,6 @@ class BuildAstVisitor<Visitor> extends AbstractParseTreeVisitor<AstNode<Visitor>
 
                 if (innerNode instanceof CommonToken) {
                     const symbol = this.parser.vocabulary.getSymbolicName(innerNode.type);
-                    debugger;
                     const token: Token = { symbol: symbol || "", text: innerNode.text || "" };
                     return [prop, token];
                 } else if (innerNode instanceof ParserRuleContext) {
@@ -91,11 +93,6 @@ class BuildAstVisitor<Visitor> extends AbstractParseTreeVisitor<AstNode<Visitor>
     }
 }
 
-export interface AST<Node> {
-    text: string;
-    node: Node;
-}
-
 interface LexerClass {
     new (s: CodePointCharStream): Lexer;
 }
@@ -104,17 +101,13 @@ interface ParserClass {
     new (s: CommonTokenStream): Parser & { start(): ParserRuleContext };
 }
 
-export function getAst<Visitor>(
-    input: string,
-    options: { lexer: LexerClass; parser: ParserClass }
-): AST<AstNode<Visitor>> {
+export function getAst<Visitor>(input: string, options: { lexer: LexerClass; parser: ParserClass }): AstNode<Visitor> {
     const { lexer: LexerClass, parser: ParserClass } = options;
     const inputStream = CharStreams.fromString(input);
     const lexer = new LexerClass(inputStream);
     const tokenStream = new CommonTokenStream(lexer);
     const parser = new ParserClass(tokenStream);
     const tree = parser.start();
-    const astVisitor = new BuildAstVisitor<Visitor>(parser);
-    const node = astVisitor.visit(tree);
-    return { text: input, node };
+    const astBuilderVisitor = new AstBuilderVisitor<Visitor>(parser);
+    return astBuilderVisitor.visit(tree);
 }
