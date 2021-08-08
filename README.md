@@ -12,6 +12,22 @@ The ANTLR4 grammar must have:
 
 A simple calculator: [ANTL4 Grammar](src/example/Calculator.g4), [AST example](src/example/calculator.ts)
 
+```g4
+grammar Calculator;
+
+ADD: '+';
+SUB: '-';
+NUMBER: '-'?[0-9]+;
+WHITESPACE: [ \r\n\t]+ -> skip;
+
+start : expression;
+
+expression
+   : value=NUMBER                                         # Number
+   | '(' inner=expression ')'                             # Parentheses
+   | left=expression operator=(ADD|SUB) right=expression  # AdditionOrSubtraction
+   ;
+```
 
 ```typescript
 function calculatorEval(node: AstNode<CalculatorVisitor<unknown>>): number {
@@ -27,7 +43,10 @@ function calculatorEval(node: AstNode<CalculatorVisitor<unknown>>): number {
     }
 }
 
-const ast = getAst<CalculatorVisitor<unknown>>("1 + 3", { lexer: CalculatorLexer, parser: CalculatorParser });
+const ast = getAst<CalculatorVisitor<unknown>>("1 + 3", {
+    lexer: CalculatorLexer,
+    parser: CalculatorParser,
+});
 console.log(JSON.stringify(ast.node, null, 2));
 console.log(ast.text, "=", calculatorEval(ast.node));
 ```
