@@ -1,7 +1,7 @@
-import { AstNode, getAst } from "./antlr4ts-adt";
-import { CalculatorLexer } from "../CalculatorLexer";
-import { CalculatorParser } from "../CalculatorParser";
-import { CalculatorVisitor } from "../CalculatorVisitor";
+import { AstNode, getAst } from "../antlr4ts-adt";
+import { CalculatorLexer } from "./antlr4/CalculatorLexer";
+import { CalculatorParser } from "./antlr4/CalculatorParser";
+import { CalculatorVisitor } from "./antlr4/CalculatorVisitor";
 
 type CalculatorNode = AstNode<CalculatorVisitor<unknown>>;
 
