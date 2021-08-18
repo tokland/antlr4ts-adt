@@ -18,5 +18,5 @@ Usage:
 $ (cd src/example && npx antlr4ts Calculator.g4 -o antlr4 -visitor)
 $ npx ts-node src/generate-adt.ts src/example/antlr4/CalculatorParser.ts StartContext src/example/CalculatorAdt.ts
 $ npx ts-node src/example/calculator.ts
-# 1 + 2 + sum(30, 8, 1) = 1
+# 1 + product(2,3,5) + sum(2,3,4,2) = 42
 ```

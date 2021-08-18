@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { getAst } from "../antlr4ts-adt";
 import { Expression, Start } from "./CalculatorAdt";
 import { CalculatorLexer } from "./antlr4/CalculatorLexer";
@@ -13,13 +14,20 @@ function calculatorEval(expr: Expression): number {
             const left = calculatorEval(expr.left);
             const right = calculatorEval(expr.right);
             return expr.operator.symbol === "ADD" ? left + right : left - right;
-        case "Sum":
-            const values = [...expr.values.head, ...expr.values.tail];
-            return values.map(calculatorEval).reduce((acc, x) => acc + x, 0);
+        case "Aggregate":
+            const values = [...expr.values.head, ...expr.values.tail].map(calculatorEval);
+            switch (expr.fn.name.text) {
+                case "sum":
+                    return _.sum(values);
+                case "product":
+                    return _.reduce(values, _.multiply, 1);
+                default:
+                    throw new Error(`Unsupported aggregate function: ${expr.fn.name}`);
+            }
     }
 }
 
-const input = "1 + 2 + sum(30, 8, 1)";
+const input = "1 + product(2,3,5) + sum(2,3,4,2)";
 const ast = getAst<Start>(input, { lexer: CalculatorLexer, parser: CalculatorParser });
 
 console.log(JSON.stringify(ast, null, 2));

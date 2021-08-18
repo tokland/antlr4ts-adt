@@ -3,23 +3,33 @@ export interface Start {
   expr: Expression;
 }
 
-export interface List {
-  type: "List";
+export interface ExprList {
+  type: "ExprList";
   expression: Expression;
   head: Expression[];
   tail: Expression[];
 }
 
-export type Expression = Number | Sum | Parentheses | AdditionOrSubtraction;
+export interface AggregateFn {
+  type: "AggregateFn";
+  name: Token;
+}
+
+export type Expression =
+  | Number
+  | Aggregate
+  | Parentheses
+  | AdditionOrSubtraction;
 
 export interface Number {
   type: "Number";
   value: Token;
 }
 
-export interface Sum {
-  type: "Sum";
-  values: List;
+export interface Aggregate {
+  type: "Aggregate";
+  fn: AggregateFn;
+  values: ExprList;
 }
 
 export interface Parentheses {
