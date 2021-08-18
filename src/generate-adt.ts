@@ -1,4 +1,4 @@
-import { parseStruct, TypeKind } from "ts-file-parser";
+import { parseStruct, TypeKind } from "ts-file-parser"; // TODO: Use released version
 import prettier from "prettier";
 import _ from "lodash";
 import fs from "fs";
@@ -32,7 +32,9 @@ function getName(contextName: string): string {
 }
 
 function getFieldName(field: Field): string {
-    return field.type === "rule" ? field.ruleName.replace(/Context$/, "") + (field.isArray ? "[]" : "") : "Token";
+    return field.type === "rule"
+        ? field.ruleName.replace(/Context$/, "") + (field.isArray ? "[]" : "")
+        : "Token";
 }
 
 function getPropFromString(s: string): string {
@@ -42,7 +44,9 @@ function getPropFromString(s: string): string {
 function getTsDeclarations(contextParentName: string, childrenContexts: Context[]): string {
     return [
         contextParentName !== "ParserRuleContext"
-            ? `export type ${getName(contextParentName)} = ${childrenContexts.map(c => getName(c.name)).join(" | ")}`
+            ? `export type ${getName(contextParentName)} = ${childrenContexts
+                  .map(c => getName(c.name))
+                  .join(" | ")}`
             : "",
         ...childrenContexts.map(
             ctx => `
@@ -128,5 +132,5 @@ const tsOutput = _(contexts)
     .concat([baseDeclarations])
     .join("\n\n");
 
-const tsFormatted = prettier.format(tsOutput, { semi: true, parser: "babel" });
+const tsFormatted = prettier.format(tsOutput, { semi: true, parser: "babel", tabWidth: 4 });
 fs.writeFileSync(adtTypesOutputPath, tsFormatted);
