@@ -12,64 +12,11 @@ The package uses an opinionated approach that does not cover all use cases. To u
 
 A simple calculator: [ANTL4 Grammar](src/example/Calculator.g4), [AST example](src/example/calculator.ts)
 
-```g4
-grammar Calculator;
-
-ADD: '+';
-SUB: '-';
-NUMBER: '-'?[0-9]+;
-WHITESPACE: [ \r\n\t]+ -> skip;
-
-start : expression;
-
-expression
-   : value=NUMBER                                         # Number
-   | '(' inner=expression ')'                             # Parentheses
-   | left=expression operator=(ADD|SUB) right=expression  # AdditionOrSubtraction
-   ;
-```
-
-```typescript
-type Grammar = CalculatorVisitor<unknown>;
-type CalculatorNode = AstNode<Grammar>;
-/* type CalculatorNode = {
-    type: "Number";
-    value: Token;
-} | {
-    type: "Parentheses";
-    inner: CalculatorNode;
-} | {
-    type: "AdditionOrSubtraction";
-    left: CalculatorNode;
-    operator: Token;
-    right: CalculatorNode;
-} */
-
-function calculatorEval(node: AstNode<CalculatorVisitor<unknown>>): number {
-    switch (node.type) {
-        case "Number":
-            return parseFloat(node.value.text);
-        case "Parentheses":
-            return calculatorEval(node.inner);
-        case "AdditionOrSubtraction":
-            const left = calculatorEval(node.left);
-            const right = calculatorEval(node.right);
-            return node.operator.symbol === "ADD" ? left + right : left - right;
-    }
-}
-
-const input = "(40 + 5) - 3";
-const ast = getAst<CalculatorVisitor<unknown>>(input, {
-    lexer: CalculatorLexer,
-    parser: CalculatorParser,
-});
-console.log(JSON.stringify(ast, null, 2));
-console.log(input, "=", calculatorEval(ast)); // (40 + 5) - 3 = 42
-```
-
 Usage:
 
 ```shell
 $ (cd src/example && npx antlr4ts Calculator.g4 -o antlr4 -visitor)
+$ npx ts-node src/generate-adt.ts src/example/antlr4/CalculatorParser.ts StartContext src/example/CalculatorAdt.ts
 $ npx ts-node src/example/calculator.ts
+# 1 + 2 + sum(30, 8, 1) = 1
 ```
