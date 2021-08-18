@@ -3,10 +3,6 @@ export interface Start {
   expr: Expression;
 }
 
-export interface Pair {
-  type: "Pair";
-}
-
 export interface ExprList {
   type: "ExprList";
   expression: Expression;
