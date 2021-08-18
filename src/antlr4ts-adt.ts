@@ -54,6 +54,7 @@ class AstBuilderVisitor<MainType> extends AbstractParseTreeVisitor<MainType> {
 
 interface GetAstOptions {
     lexer: { new (s: CodePointCharStream): Lexer };
+    // TODO: start should not be hardcoded
     parser: { new (s: CommonTokenStream): Parser & { start(): ParserRuleContext } };
 }
 
