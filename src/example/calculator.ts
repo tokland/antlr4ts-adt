@@ -1,8 +1,5 @@
 import _ from "lodash";
-import { getAst } from "../antlr4ts-adt";
-import { Expression, Start } from "./CalculatorAdt";
-import { CalculatorLexer } from "./antlr4/CalculatorLexer";
-import { CalculatorParser } from "./antlr4/CalculatorParser";
+import { Expression, getAst } from "./antlr4/CalculatorAdt";
 
 function evalExpr(expr: Expression): number {
     switch (expr.type) {
@@ -28,8 +25,7 @@ function evalExpr(expr: Expression): number {
 }
 
 const [input] = process.argv.slice(2);
-// TODO: Add custom getAst to CalculatorAdt
-const ast = getAst<"start", Start>(input, "start", { lexer: CalculatorLexer, parser: CalculatorParser });
+const ast = getAst(input);
 
 console.error(JSON.stringify(ast, null, 2));
 console.log(evalExpr(ast.expr));
