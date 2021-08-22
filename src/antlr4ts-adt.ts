@@ -52,19 +52,23 @@ class AstBuilderVisitor<MainType> extends AbstractParseTreeVisitor<MainType> {
     }
 }
 
-interface GetAstOptions {
+interface GetAstOptions<StartKey extends string> {
     lexer: { new (s: CodePointCharStream): Lexer };
     // TODO: start should not be hardcoded
-    parser: { new (s: CommonTokenStream): Parser & { start(): ParserRuleContext } };
+    parser: { new (s: CommonTokenStream): Parser & { [K in StartKey]: () => ParserRuleContext } };
 }
 
-export function getAst<StartType>(input: string, options: GetAstOptions): StartType {
+export function getAst<StartKey extends string, StartType>(
+    input: string,
+    startKey: StartKey,
+    options: GetAstOptions<StartKey>
+): StartType {
     const { lexer: LexerClass, parser: ParserClass } = options;
     const inputStream = CharStreams.fromString(input);
     const lexer = new LexerClass(inputStream);
     const tokenStream = new CommonTokenStream(lexer);
     const parser = new ParserClass(tokenStream);
-    const tree = parser.start();
+    const tree = parser[startKey]();
     const astBuilderVisitor = new AstBuilderVisitor<StartType>(parser);
     return astBuilderVisitor.visit(tree);
 }

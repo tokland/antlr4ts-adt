@@ -28,7 +28,8 @@ function evalExpr(expr: Expression): number {
 }
 
 const [input] = process.argv.slice(2);
-const ast = getAst<Start>(input, { lexer: CalculatorLexer, parser: CalculatorParser });
+// TODO: Add custom getAst to CalculatorAdt
+const ast = getAst<"start", Start>(input, "start", { lexer: CalculatorLexer, parser: CalculatorParser });
 
 console.error(JSON.stringify(ast, null, 2));
 console.log(evalExpr(ast.expr));
