@@ -27,8 +27,8 @@ function evalExpr(expr: Expression): number {
     }
 }
 
-const input = "1 + product(2, 3, 6-2) + sum(2, 3, 4, 2) = 42";
+const [input] = process.argv.slice(2);
 const ast = getAst<Start>(input, { lexer: CalculatorLexer, parser: CalculatorParser });
 
-console.log(JSON.stringify(ast, null, 2));
-console.log(input, "=", evalExpr(ast.expr));
+console.error(JSON.stringify(ast, null, 2));
+console.log(evalExpr(ast.expr));

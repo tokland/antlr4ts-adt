@@ -1,7 +1,7 @@
-import { parseStruct, TypeKind } from "ts-file-parser"; // TODO: Use released version
-import prettier from "prettier";
+import { FieldModel, Module, parseStruct, TypeKind } from "ts-file-parser"; // TODO: Use released version
 import _ from "lodash";
 import fs from "fs";
+import prettier from "prettier";
 
 type Contexts = Context[];
 
@@ -41,10 +41,10 @@ function getPropFromString(s: string): string {
     return s.replace(/^_/, "");
 }
 
-function getTsDeclarations(contextParentName: string, childrenContexts: Context[]): string {
+function getTsDeclarations(parentContextName: string, childrenContexts: Context[]): string {
     return [
-        contextParentName !== "ParserRuleContext"
-            ? `export type ${getName(contextParentName)} = ${childrenContexts
+        parentContextName !== "ParserRuleContext"
+            ? `export type ${getName(parentContextName)} = ${childrenContexts
                   .map(c => getName(c.name))
                   .join(" | ")}`
             : "",
@@ -59,78 +59,73 @@ function getTsDeclarations(contextParentName: string, childrenContexts: Context[
     ].join("\n");
 }
 
-const baseDeclarations = `
-    export type Token = { symbol: string; text: string };
-`;
+function getContexts(json: Module): Contexts {
+    return _.compact(
+        json.classes.map((class_): Context | null => {
+            const name = class_.name;
+            const parentContextName = _(class_.extends)
+                .map(e => (e.typeKind === TypeKind.BASIC ? e.typeName : null))
+                .first();
 
-const [parserPath, mainContextName, adtTypesOutputPath] = process.argv.slice(2);
-const decls = fs.readFileSync(parserPath).toString();
-const json = parseStruct(decls, {}, parserPath);
+            if (!parentContextName || !parentContextName.endsWith("Context")) return null;
 
-const contexts: Contexts = _.compact(
-    json.classes.map((class_): Context | null => {
-        const name = class_.name;
-        const parentContextName = _(class_.extends)
-            .map(e => (e.typeKind === TypeKind.BASIC ? e.typeName : null))
-            .first();
+            const fields = _.compact(class_.fields.map(fieldModel => getField(fieldModel)));
+            return { name, parent: parentContextName, fields };
+        })
+    );
+}
 
-        if (
-            !parentContextName ||
-            parentContextName === "Parser" ||
-            false
-            //(parentContextName === "ParserRuleContext" && name !== mainContextName)
-        )
+function getField(fieldModel: FieldModel): Field | null {
+    const prop = getPropFromString(fieldModel.name);
+
+    if (!fieldModel.type) {
+        return null;
+    } else if (fieldModel.type.typeKind === TypeKind.ARRAY) {
+        const innerType = fieldModel.type.base;
+        if (innerType.typeKind !== TypeKind.BASIC) {
             return null;
+        } else if (innerType.typeName.endsWith("Context")) {
+            return { type: "rule", prop, ruleName: innerType.typeName, isArray: true };
+        } else {
+            return null;
+        }
+    } else if (fieldModel.type.typeKind !== TypeKind.BASIC) {
+        return null;
+    } else if (fieldModel.type.typeName === "Token") {
+        return { type: "token", prop };
+    } else if (fieldModel.type.typeName.endsWith("Context")) {
+        return { type: "rule", prop, ruleName: fieldModel.type.typeName, isArray: false };
+    } else {
+        return null;
+    }
+}
 
-        const fields = _(class_.fields)
-            .map((fieldModel): Field | null => {
-                const prop = getPropFromString(fieldModel.name);
+function main(args: string[]): void {
+    const [parserPath, _mainContextName, adtTypesOutputPath] = args;
+    const contents = fs.readFileSync(parserPath).toString();
+    const tsModule = parseStruct(contents, {}, parserPath);
+    const contexts = getContexts(tsModule);
 
-                if (!fieldModel.type) {
-                    return null;
-                } else if (fieldModel.type.typeKind === TypeKind.ARRAY) {
-                    const type2 = fieldModel.type.base;
-                    if (type2.typeKind !== TypeKind.BASIC) {
-                        return null;
-                    } else if (type2.typeName.endsWith("Context")) {
-                        const ruleName = type2.typeName;
-                        return { type: "rule", prop, ruleName, isArray: true };
-                    } else {
-                        return null;
-                    }
-                } else if (fieldModel.type.typeKind !== TypeKind.BASIC) {
-                    return null;
-                } else if (fieldModel.type.typeName === "Token") {
-                    return { type: "token", prop };
-                } else if (fieldModel.type.typeName.endsWith("Context")) {
-                    const ruleName = fieldModel.type.typeName;
-                    return { type: "rule", prop, ruleName, isArray: false };
-                } else {
-                    return null;
-                }
-            })
-            .compact()
-            .value();
+    const baseDeclarations = `
+        export type Token = { symbol: string; text: string };
+    `;
 
-        return { name, parent: parentContextName, fields };
-    })
-);
+    const parentContextNames = contexts.map(ctx => ctx.parent);
 
-// contexts.forEach(context => console.error(context));
+    const tsOutput = _(contexts)
+        .groupBy(context => context.parent)
+        .toPairs()
+        .map(([parentContextName, childrenContexts]) => {
+            return getTsDeclarations(
+                parentContextName,
+                childrenContexts.filter(ctx => !parentContextNames.includes(ctx.name))
+            );
+        })
+        .concat([baseDeclarations])
+        .join("\n\n");
 
-const parents = contexts.map(ctx => ctx.parent);
+    const tsFormatted = prettier.format(tsOutput, { semi: true, parser: "babel", tabWidth: 4 });
+    fs.writeFileSync(adtTypesOutputPath, tsFormatted);
+}
 
-const tsOutput = _(contexts)
-    .groupBy(context => context.parent)
-    .toPairs()
-    .map(([contextParentName, childrenContexts]) => {
-        return getTsDeclarations(
-            contextParentName,
-            childrenContexts.filter(ctx => !parents.includes(ctx.name))
-        );
-    })
-    .concat([baseDeclarations])
-    .join("\n\n");
-
-const tsFormatted = prettier.format(tsOutput, { semi: true, parser: "babel", tabWidth: 4 });
-fs.writeFileSync(adtTypesOutputPath, tsFormatted);
+main(process.argv.slice(2));

@@ -20,6 +20,6 @@ A simple calculator:
 $ cd src/example
 $ npx antlr4ts Calculator.g4 -o antlr4 -visitor
 $ npx ts-node ../generate-adt.ts antlr4/CalculatorParser.ts StartContext CalculatorAdt.ts
-$ npx ts-node calculator.ts
-# 1 + product(2, 3, 6-2) + sum(2, 3, 4, 2) = 42
+$ npx ts-node calculator.ts "1 + product(5 - 2, 2) + sum(1, 2, 2 + 1)"
+# 13
 ```
