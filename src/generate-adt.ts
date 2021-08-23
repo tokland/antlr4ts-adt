@@ -1,6 +1,7 @@
 import { FieldModel, Module, parseStruct, TypeKind } from "ts-file-parser"; // TODO: Use released version
 import _ from "lodash";
 import fs from "fs";
+import path from "path";
 import prettier from "prettier";
 
 type Contexts = Context[];
@@ -101,31 +102,63 @@ function getField(fieldModel: FieldModel): Field | null {
 }
 
 function main(args: string[]): void {
-    const [parserPath, _mainContextName, adtTypesOutputPath] = args;
+    const [parserPath] = args;
     const contents = fs.readFileSync(parserPath).toString();
     const tsModule = parseStruct(contents, {}, parserPath);
     const contexts = getContexts(tsModule);
+    const parserName = tsModule.classes[0]?.name;
+    if (!parserName) throw new Error("No parser name");
 
-    const baseDeclarations = `
-        export type Token = { symbol: string; text: string };
+    const lexerName = parserName.replace(/Parser$/, "Lexer");
+    const baseName = parserName.replace(/Parser$/, "");
+
+    const topCode = `
+        import { Token, getAdtFromLexerParser } from "../../antlr4ts-adt"; // TODO
+        import { ${lexerName} } from "./${lexerName}";
+        import { ${parserName} } from "./${parserName}";
+        export { Token };
     `;
 
-    const parentContextNames = contexts.map(ctx => ctx.parent);
+    const bottomCode = `
+        export function getAst<Rule extends keyof Mapping>(startRule: Rule, input: string): Mapping[Rule] {
+            return getAdtFromLexerParser<CalculatorParser, Mapping[Rule]>(
+                input,
+                ${lexerName},
+                ${parserName},
+                parser => parser[startRule]
+            );
+        }
+    `;
+
+    const parentContextNames = new Set(contexts.map(ctx => ctx.parent));
+
+    const rootContexts = contexts.filter(ctx => ctx.parent === "ParserRuleContext");
+
+    const mapping = `
+        interface Mapping {
+            ${rootContexts.map(ctx => `${uncapitalize(getName(ctx.name))}: ${getName(ctx.name)}`)}
+        };
+    `;
 
     const tsOutput = _(contexts)
         .groupBy(context => context.parent)
         .toPairs()
         .map(([parentContextName, childrenContexts]) => {
-            return getTsDeclarations(
-                parentContextName,
-                childrenContexts.filter(ctx => !parentContextNames.includes(ctx.name))
-            );
+            const unionContexts = childrenContexts.filter(ctx => !parentContextNames.has(ctx.name));
+            return getTsDeclarations(parentContextName, unionContexts);
         })
-        .concat([baseDeclarations])
+        .thru(declarationLines => [topCode, ...declarationLines, mapping, bottomCode])
         .join("\n\n");
 
-    const tsFormatted = prettier.format(tsOutput, { semi: true, parser: "babel", tabWidth: 4 });
+    const tsFormatted = prettier.format(tsOutput, { semi: true, parser: "typescript", tabWidth: 4 });
+    const adtTypesOutputPath = path.join(path.dirname(parserPath), baseName + "Adt.ts");
     fs.writeFileSync(adtTypesOutputPath, tsFormatted);
+
+    console.error(`Written: ${adtTypesOutputPath}`);
+}
+
+function uncapitalize(s: string) {
+    return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
 main(process.argv.slice(2));

@@ -10,9 +10,9 @@ import {
 import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
 import { RuleNode } from "antlr4ts/tree/RuleNode";
 
-type Token = { symbol: string | undefined; text: string };
+export type Token = { symbol: string | undefined; text: string };
 
-class AstBuilderVisitor<MainType> extends AbstractParseTreeVisitor<MainType> {
+export class AstBuilderVisitor<MainType> extends AbstractParseTreeVisitor<MainType> {
     constructor(private parser: Parser) {
         super();
     }
@@ -52,23 +52,24 @@ class AstBuilderVisitor<MainType> extends AbstractParseTreeVisitor<MainType> {
     }
 }
 
-interface GetAstOptions<StartKey extends string> {
-    lexer: { new (s: CodePointCharStream): Lexer };
-    // TODO: start should not be hardcoded
-    parser: { new (s: CommonTokenStream): Parser & { [K in StartKey]: () => ParserRuleContext } };
-}
+type LexerClass = { new (s: CodePointCharStream): Lexer };
 
-export function getAst<StartKey extends string, StartType>(
+type ParserClass<MyParser extends Parser> = {
+    new (s: CommonTokenStream): MyParser;
+};
+
+export function getAdtFromLexerParser<MyParser extends Parser, ResultType>(
     input: string,
-    startKey: StartKey,
-    options: GetAstOptions<StartKey>
-): StartType {
-    const { lexer: LexerClass, parser: ParserClass } = options;
+    LexerClass: LexerClass,
+    ParserClass: ParserClass<MyParser>,
+    getTreeFn: (parser: MyParser) => () => ParserRuleContext
+): ResultType {
     const inputStream = CharStreams.fromString(input);
     const lexer = new LexerClass(inputStream);
     const tokenStream = new CommonTokenStream(lexer);
     const parser = new ParserClass(tokenStream);
-    const tree = parser[startKey]();
-    const astBuilderVisitor = new AstBuilderVisitor<StartType>(parser);
-    return astBuilderVisitor.visit(tree);
+    const treeBuilder = getTreeFn(parser);
+    const tree = treeBuilder.bind(parser)();
+    const visitor = new AstBuilderVisitor<ResultType>(parser);
+    return visitor.visit(tree);
 }

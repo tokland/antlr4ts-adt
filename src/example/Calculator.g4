@@ -12,9 +12,9 @@ exprList: head+=expression? (',' tail+=expression)*;
 aggregateFn: name=('sum' | 'product');
 
 expression
-   : value=NUMBER                                         # Number
-   | fn=aggregateFn '(' values=exprList ')'               # Aggregate
-   | '(' inner=expression ')'                             # Parentheses
-   | left=expression operator=(ADD|SUB) right=expression  # AdditionOrSubtraction
+   : value=NUMBER                                         # number
+   | fn=aggregateFn '(' values=exprList ')'               # aggregate
+   | '(' inner=expression ')'                             # parentheses
+   | left=expression operator=(ADD|SUB) right=expression  # additionOrSubtraction
    ;
 

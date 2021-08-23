@@ -25,7 +25,7 @@ function evalExpr(expr: Expression): number {
 }
 
 const [input] = process.argv.slice(2);
-const ast = getAst(input);
+const ast = getAst("start", input);
 
 console.error(JSON.stringify(ast, null, 2));
 console.log(evalExpr(ast.expr));
