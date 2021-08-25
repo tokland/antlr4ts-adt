@@ -1,4 +1,4 @@
-import { ArrayType, BasicType, FieldModel, Module, parseStruct, TypeKind } from "ts-file-parser"; // TODO: Use released version
+import { FieldModel, Module, parseStruct, TypeKind } from "@tokland/ts-file-parser";
 import _ from "lodash";
 import fs from "fs";
 import path from "path";
@@ -73,7 +73,7 @@ function getContexts(json: Module): Contexts {
         json.classes.map((class_): Context | null => {
             const name = class_.name;
             const parentContextName = _(class_.extends)
-                .map(e => (e.typeKind === TypeKind.BASIC ? (e as BasicType).typeName : null))
+                .map(typeModel => (typeModel.typeKind === TypeKind.BASIC ? typeModel.typeName : null))
                 .first();
 
             if (!parentContextName || !parentContextName.endsWith("Context")) return null;
@@ -90,20 +90,20 @@ function getField(fieldModel: FieldModel): Field | null {
     if (!fieldModel.type) {
         return null;
     } else if (fieldModel.type.typeKind === TypeKind.ARRAY) {
-        const innerType = (fieldModel.type as ArrayType).base;
+        const innerType = fieldModel.type.base;
         if (innerType.typeKind !== TypeKind.BASIC) {
             return null;
-        } else if ((innerType as BasicType).typeName.endsWith("Context")) {
-            return { type: "rule", prop, ruleName: (innerType as BasicType).typeName, isArray: true };
+        } else if (innerType.typeName.endsWith("Context")) {
+            return { type: "rule", prop, ruleName: innerType.typeName, isArray: true };
         } else {
             return null;
         }
     } else if (fieldModel.type.typeKind !== TypeKind.BASIC) {
         return null;
-    } else if ((fieldModel.type as BasicType).typeName === "Token") {
+    } else if (fieldModel.type.typeName === "Token") {
         return { type: "token", prop };
-    } else if ((fieldModel.type as BasicType).typeName.endsWith("Context")) {
-        return { type: "rule", prop, ruleName: (fieldModel.type as BasicType).typeName, isArray: false };
+    } else if (fieldModel.type.typeName.endsWith("Context")) {
+        return { type: "rule", prop, ruleName: fieldModel.type.typeName, isArray: false };
     } else {
         return null;
     }
