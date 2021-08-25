@@ -3,15 +3,15 @@ import { Expression, getAst } from "./antlr4/CalculatorAdt";
 
 function evalExpr(expr: Expression): number {
     switch (expr.type) {
-        case "Number":
+        case "number":
             return parseFloat(expr.value.text);
-        case "Parentheses":
+        case "parentheses":
             return evalExpr(expr.inner);
-        case "AdditionOrSubtraction":
+        case "additionOrSubtraction":
             const left = evalExpr(expr.left);
             const right = evalExpr(expr.right);
             return expr.operator.symbol === "ADD" ? left + right : left - right;
-        case "Aggregate":
+        case "aggregate":
             const values = [...expr.values.head, ...expr.values.tail].map(evalExpr);
             switch (expr.fn.name.text) {
                 case "sum":

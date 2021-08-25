@@ -48,8 +48,15 @@ export class AstBuilderVisitor<MainType> extends AbstractParseTreeVisitor<MainTy
         });
 
         // TODO: Fix this cast
-        return { type: contextName, ...Object.fromEntries(pairs) } as unknown as MainType;
+        return {
+            type: uncapitalize(contextName),
+            ...Object.fromEntries(pairs),
+        } as unknown as MainType;
     }
+}
+
+function uncapitalize(s: string) {
+    return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
 type LexerClass = { new (s: CodePointCharStream): Lexer };

@@ -1,4 +1,4 @@
-import { FieldModel, Module, parseStruct, TypeKind } from "ts-file-parser"; // TODO: Use released version
+import { ArrayType, BasicType, FieldModel, Module, parseStruct, TypeKind } from "ts-file-parser"; // TODO: Use released version
 import _ from "lodash";
 import fs from "fs";
 import path from "path";
@@ -28,8 +28,16 @@ interface Context {
     fields: Field[];
 }
 
+function uncapitalize(s: string) {
+    return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
 function getName(contextName: string): string {
     return contextName.replace(/Context$/, "");
+}
+
+function getTypeName(contextName: string): string {
+    return uncapitalize(getName(contextName));
 }
 
 function getFieldName(field: Field): string {
@@ -52,7 +60,7 @@ function getTsDeclarations(parentContextName: string, childrenContexts: Context[
         ...childrenContexts.map(
             ctx => `
                 export interface ${getName(ctx.name)} {
-                    type: "${getName(ctx.name)}";
+                    type: "${getTypeName(ctx.name)}";
                     ${ctx.fields.map(field => `${field.prop}: ${getFieldName(field)};`).join("\n")}
                 }
             `
@@ -65,7 +73,7 @@ function getContexts(json: Module): Contexts {
         json.classes.map((class_): Context | null => {
             const name = class_.name;
             const parentContextName = _(class_.extends)
-                .map(e => (e.typeKind === TypeKind.BASIC ? e.typeName : null))
+                .map(e => (e.typeKind === TypeKind.BASIC ? (e as BasicType).typeName : null))
                 .first();
 
             if (!parentContextName || !parentContextName.endsWith("Context")) return null;
@@ -82,20 +90,20 @@ function getField(fieldModel: FieldModel): Field | null {
     if (!fieldModel.type) {
         return null;
     } else if (fieldModel.type.typeKind === TypeKind.ARRAY) {
-        const innerType = fieldModel.type.base;
+        const innerType = (fieldModel.type as ArrayType).base;
         if (innerType.typeKind !== TypeKind.BASIC) {
             return null;
-        } else if (innerType.typeName.endsWith("Context")) {
-            return { type: "rule", prop, ruleName: innerType.typeName, isArray: true };
+        } else if ((innerType as BasicType).typeName.endsWith("Context")) {
+            return { type: "rule", prop, ruleName: (innerType as BasicType).typeName, isArray: true };
         } else {
             return null;
         }
     } else if (fieldModel.type.typeKind !== TypeKind.BASIC) {
         return null;
-    } else if (fieldModel.type.typeName === "Token") {
+    } else if ((fieldModel.type as BasicType).typeName === "Token") {
         return { type: "token", prop };
-    } else if (fieldModel.type.typeName.endsWith("Context")) {
-        return { type: "rule", prop, ruleName: fieldModel.type.typeName, isArray: false };
+    } else if ((fieldModel.type as BasicType).typeName.endsWith("Context")) {
+        return { type: "rule", prop, ruleName: (fieldModel.type as BasicType).typeName, isArray: false };
     } else {
         return null;
     }
@@ -136,7 +144,7 @@ function main(args: string[]): void {
 
     const mapping = `
         interface Mapping {
-            ${rootContexts.map(ctx => `${uncapitalize(getName(ctx.name))}: ${getName(ctx.name)}`)}
+            ${rootContexts.map(ctx => `${getTypeName(ctx.name)}: ${getName(ctx.name)}`)}
         };
     `;
 
@@ -155,10 +163,6 @@ function main(args: string[]): void {
     fs.writeFileSync(adtTypesOutputPath, tsFormatted);
 
     console.error(`Written: ${adtTypesOutputPath}`);
-}
-
-function uncapitalize(s: string) {
-    return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
 main(process.argv.slice(2));
