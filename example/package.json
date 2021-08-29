@@ -1,0 +1,13 @@
+{
+  "name": "antlr4ts-adt-example",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "antlr4ts-adt": "0.0.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.2"
+  }
+}
