@@ -160,7 +160,7 @@ function main(args: string[]): void {
     const baseName = parserName.replace(/Parser$/, "");
 
     const topCode = `
-        import { Token, getAdtFromLexerParser } from "../../antlr4ts-adt"; // TODO
+        import { Token, getAdtFromLexerParser } from "antlr4ts-adt";
         import { ${lexerName} } from "./${lexerName}";
         import { ${parserName} } from "./${parserName}";
         export { Token };
