@@ -1,4 +1,20 @@
-Generate ADT Typescript files for ANTLR4 grammars from antlr4ts files.
+Generate ADT Typescript types for ANTLR4 grammars using antlr4ts.
+
+## Install
+
+```shell
+$ yarn add -D antlr4ts
+$ yarn add antlr4ts-adt
+```
+
+Now create a `.g4` grammar and generate the ADT in two steps:
+
+```
+$ npx antlr4ts MyGrammar.g4 -visitor
+$ npx antlr4ts-adt MyGrammarParser.ts
+```
+
+This creates a file `MyGrammarAdt.ts` with the types generated from the grammar and a `getAst` function.
 
 ## Example
 
