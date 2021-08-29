@@ -1,6 +1,7 @@
 import { Token, getAdtFromLexerParser } from "antlr4ts-adt";
 import { CalculatorLexer } from "./CalculatorLexer";
 import { CalculatorParser } from "./CalculatorParser";
+
 export { Token };
 
 export interface Start {
@@ -25,6 +26,7 @@ export type Expression =
     | Aggregate
     | Parentheses
     | AdditionOrSubtraction;
+
 export interface Number {
     type: "number";
     value: Token;

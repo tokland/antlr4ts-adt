@@ -63,6 +63,7 @@ function getTsDeclarations(parentContextName: string, childrenContexts: Context[
                   .map(c => getName(c.name))
                   .join(" | ")}`
             : "",
+        "",
         ...childrenContexts.map(ctx => {
             const fields = ctx.fields.filter(field => !ctx.methods.map(m => m.name).includes(field.prop));
             return `
@@ -163,6 +164,7 @@ function main(args: string[]): void {
         import { Token, getAdtFromLexerParser } from "antlr4ts-adt";
         import { ${lexerName} } from "./${lexerName}";
         import { ${parserName} } from "./${parserName}";
+
         export { Token };
     `;
 

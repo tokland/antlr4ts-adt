@@ -1,6 +1,6 @@
 {
     "name": "antlr4ts-adt",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "license": "MIT",
     "dependencies": {
         "@tokland/ts-file-parser": "0.0.23",
