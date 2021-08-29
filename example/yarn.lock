@@ -51,10 +51,10 @@ acorn@^8.4.1:
   resolved "https://registry.npmjs.org/acorn/-/acorn-8.4.1.tgz#56c36251fc7cabc7096adc18f05afe814321a28c"
   integrity sha512-asabaBSkEKosYKMITunzX177CXxQ4Q8BSSzMTKD+FefUhipQC70gfW5SiUDhYQ3vk8G+81HqQk7Fv9OXwwn9KA==
 
-antlr4ts-adt@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.npmjs.org/antlr4ts-adt/-/antlr4ts-adt-0.0.2.tgz#940835ed1d43fcb55ca5163fe3b6d442e4637d75"
-  integrity sha512-PBxOfwh1mz25aIyM0WqZ9VRbzXaNK+JQ3ZmaOdu4Ydz3w1JRX8wgJD8mp+AIYymcA3jNtvxFBZYgWF9M0pzvRg==
+antlr4ts-adt@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.npmjs.org/antlr4ts-adt/-/antlr4ts-adt-0.0.3.tgz#a0677f56fa2c7038f62dd8b4916d6a0839304e6e"
+  integrity sha512-MD3BOPXMaj4Zq0AMZudlxeYYhYIvN9HfFEEqbLo7aci2bwxktxYV55bhhSoHI3vWm0jeZR2BDm+q4zqtYKJGcw==
   dependencies:
     "@tokland/ts-file-parser" "0.0.23"
     antlr4ts "^0.5.0-alpha.4"
