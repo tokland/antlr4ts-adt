@@ -1,4 +1,4 @@
-import { FieldModel, Module, parseStruct, TypeKind } from "@tokland/ts-file-parser";
+import { FieldModel, Module, parseStruct, TypeKind, TypeModel } from "@tokland/ts-file-parser";
 import _ from "lodash";
 import fs from "fs";
 import path from "path";
@@ -22,10 +22,16 @@ interface RuleField {
     isArray: boolean;
 }
 
+interface ContextMethod {
+    name: string;
+    typeString: string;
+}
+
 interface Context {
     name: ContextName;
     parent: ContextName;
     fields: Field[];
+    methods: ContextMethod[];
 }
 
 function uncapitalize(s: string) {
@@ -57,16 +63,20 @@ function getTsDeclarations(parentContextName: string, childrenContexts: Context[
                   .map(c => getName(c.name))
                   .join(" | ")}`
             : "",
-        ...childrenContexts.map(
-            ctx => `
+        ...childrenContexts.map(ctx => {
+            const fields = ctx.fields.filter(field => !ctx.methods.map(m => m.name).includes(field.prop));
+            return `
                 export interface ${getName(ctx.name)} {
                     type: "${getTypeName(ctx.name)}";
-                    ${ctx.fields.map(field => `${field.prop}: ${getFieldName(field)};`).join("\n")}
+                    ${fields.map(field => `${field.prop}: ${getFieldName(field)};`).join("\n")}
+                    ${ctx.methods.map(method => `${method.name}: ${method.typeString};`).join("\n")}
                 }
-            `
-        ),
+            `.replace(/^\s*[\r\n]/gm, "");
+        }),
     ].join("\n");
 }
+
+const ignoredMethods = ["enterRule", "exitRule", "accept"];
 
 function getContexts(json: Module): Contexts {
     return _.compact(
@@ -76,12 +86,41 @@ function getContexts(json: Module): Contexts {
                 .map(typeModel => (typeModel.typeKind === TypeKind.BASIC ? typeModel.typeName : null))
                 .first();
 
-            if (!parentContextName || !parentContextName.endsWith("Context")) return null;
+            if (!parentContextName || !isContext(parentContextName)) return null;
 
             const fields = _.compact(class_.fields.map(fieldModel => getField(fieldModel)));
-            return { name, parent: parentContextName, fields };
+            const methods = class_.methods
+                .filter(
+                    method =>
+                        !getTypeAsString(method.returnType).includes("TerminalNode") &&
+                        !ignoredMethods.includes(method.name) &&
+                        method.arguments.length === 0
+                )
+                .map(
+                    (method): ContextMethod => ({
+                        name: method.name,
+                        typeString: getTypeAsString(method.returnType),
+                    })
+                );
+
+            return { name, parent: parentContextName, fields, methods };
         })
     );
+}
+
+function getTypeAsString(typeModel: TypeModel): string {
+    switch (typeModel.typeKind) {
+        case TypeKind.BASIC:
+            return getName(typeModel.typeName);
+        case TypeKind.ARRAY:
+            return `(${getTypeAsString(typeModel.base)})[]`;
+        case TypeKind.UNION:
+            return typeModel.options.map(option => getTypeAsString(option)).join(" | ");
+    }
+}
+
+function isContext(name: string): boolean {
+    return name.endsWith("Context");
 }
 
 function getField(fieldModel: FieldModel): Field | null {
@@ -93,7 +132,7 @@ function getField(fieldModel: FieldModel): Field | null {
         const innerType = fieldModel.type.base;
         if (innerType.typeKind !== TypeKind.BASIC) {
             return null;
-        } else if (innerType.typeName.endsWith("Context")) {
+        } else if (isContext(innerType.typeName)) {
             return { type: "rule", prop, ruleName: innerType.typeName, isArray: true };
         } else {
             return null;
@@ -102,7 +141,7 @@ function getField(fieldModel: FieldModel): Field | null {
         return null;
     } else if (fieldModel.type.typeName === "Token") {
         return { type: "token", prop };
-    } else if (fieldModel.type.typeName.endsWith("Context")) {
+    } else if (isContext(fieldModel.type.typeName)) {
         return { type: "rule", prop, ruleName: fieldModel.type.typeName, isArray: false };
     } else {
         return null;

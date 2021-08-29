@@ -28,4 +28,4 @@ const [input] = process.argv.slice(2);
 const ast = getAst("start", input);
 
 console.error(JSON.stringify(ast, null, 2));
-console.log(evalExpr(ast.expr));
+console.log(evalExpr(ast.expression));

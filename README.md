@@ -1,13 +1,5 @@
 Generate ADT Typescript files for ANTLR4 grammars from antlr4ts files.
 
-## Requirements
-
-Your ANTLR4 grammar must have:
-
--   A `start` rule.
--   Named labels (`| NODE # ThisIsALabel`) for all sub-rules that must be accessible in the ADT.
--   Inner labels (`mylabel=NODE`) for all properties that must be accessible in the ADT.
-
 ## Example
 
 A simple calculator:

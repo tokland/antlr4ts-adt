@@ -5,7 +5,7 @@ SUB: '-';
 NUMBER: '-'?[0-9]+;
 WHITESPACE: [ \r\n\t]+ -> skip;
 
-start : expr=expression;
+start : expression;
 
 exprList: head+=expression? (',' tail+=expression)*;
 
