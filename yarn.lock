@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@tokland/ts-file-parser@0.0.22":
-  version "0.0.22"
-  resolved "https://registry.npmjs.org/@tokland/ts-file-parser/-/ts-file-parser-0.0.22.tgz#96116e012699f6164c758a8d49989842d81ec92b"
-  integrity sha512-pMgZiU+ZS8QZB1cYN9tqJpP+kCpJSICrHyRQX/Ze7VVs8rvjMO6kApSzwSrxTmmH5VXjt8AQgjI3R0fiqYGnBA==
+"@tokland/ts-file-parser@0.0.23":
+  version "0.0.23"
+  resolved "https://registry.npmjs.org/@tokland/ts-file-parser/-/ts-file-parser-0.0.23.tgz#fbe09220e468ca97e419ea1ed68f5b95112128a8"
+  integrity sha512-lyj5Qb7o5ZBkJfafUfqZcwuUo2aFyDR4I9MvYYje8IrWEOLSAbiF9fWyVIocSJ9etOJseObs2CP+Cm5Z3lQT7w==
   dependencies:
     typescript "2.7.2"
 

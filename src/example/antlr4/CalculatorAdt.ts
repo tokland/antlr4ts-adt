@@ -1,4 +1,4 @@
-import { Token, getAdtFromLexerParser } from "antlr4ts-adt"; // TODO
+import { Token, getAdtFromLexerParser } from "antlr4ts-adt";
 import { CalculatorLexer } from "./CalculatorLexer";
 import { CalculatorParser } from "./CalculatorParser";
 export { Token };
